@@ -13,7 +13,6 @@ import XMonad.Hooks.SetWMName
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageHelpers
 
-import XMonad.Layout.Grid
 import XMonad.Layout.Spiral
 import XMonad.Layout.NoBorders
 import XMonad.Layout.ResizableTile
@@ -24,9 +23,9 @@ import XMonad.Actions.CycleWS
 
 import XMonad.Util.Run
 import XMonad.Config.Gnome
+import XMonad.Config.Xfce
 
 -- options
--- myTerminal      = "alacritty"
 myTerminal      = "xfce4-terminal"
 myModMask       = mod4Mask
 
@@ -43,7 +42,7 @@ myNonFocusedTextColor = "#7c6f64"
 
 -- layouts
 -- myLayout = avoidStruts $ smartBorders (mosaic 4 [2,3])
-myLayout = avoidStruts $ smartBorders (tiled ||| Mirror tiled ||| noBorders Full ||| Grid ||| spiral (6/7))
+myLayout = avoidStruts $ smartBorders (tiled ||| Mirror tiled ||| spiral (6/7) ||| noBorders Full )
   where
     tiled   = Tall nmaster delta ratio
     nmaster = 1
@@ -63,8 +62,8 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
   , ((modm,               xK_o     ), spawn "rofi -show window")
   , ((modm,               xK_v     ), spawn "clipmenu")
   , ((modm,               xK_d     ), spawn "xrandr --auto")
-  
   -- window management
+  , ((modm,               xK_b), sendMessage ToggleStruts)
   , ((modm .|. shiftMask, xK_c     ), kill)
   , ((modm,               xK_space ), sendMessage NextLayout)
   , ((modm .|. shiftMask, xK_space ), setLayout $ XMonad.layoutHook conf)
@@ -83,10 +82,10 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
   , ((modm,               xK_period), sendMessage (IncMasterN (-1)))
   , ((modm,               xK_Left  ), prevWS)
   , ((modm,               xK_Right ), nextWS)
-  , ((modm              , xK_b     ), sendMessage ToggleStruts)
 
   -- Xmonad
-  , ((modm .|. shiftMask, xK_q     ), io (exitWith ExitSuccess))
+  , ((modm .|. shiftMask, xK_q), spawn "xfce4-session-logout")
+  -- , ((modm .|. shiftMask, xK_q     ), io (exitWith ExitSuccess))
   , ((modm,               xK_q     ), spawn "xmonad --recompile; xmonad --restart")
   ]
     ++
@@ -122,31 +121,28 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 -- Window rules:
 myManageHook = composeAll
   [ manageDocks
-  , isFullscreen --> doFullFloat]
+  , className =? "rofi"  --> doFullFloat
+  , isFullscreen --> doFullFloat ]
 
--- Event handling
-myEventHook = handleEventHook def <+> fullscreenEventHook <+> docksEventHook <+> ewmhDesktopsEventHook
-  
--- Startup hook
-myStartupHook = do
-  setWMName "LG3D"
 
--- main
-main = do
-  xmproc <- spawnPipe "/usr/bin/xmobar ~/.xmonad/xmobar.hs"
-  xmonad $ ewmh defaults {
-    logHook = dynamicLogWithPP $ xmobarPP
-      { ppOutput = hPutStrLn xmproc
-      , ppTitle = xmobarColor myXmobarTitleColor "" . shorten 75
-      , ppLayout = xmobarColor myXmobarLayoutColor ""
-      , ppCurrent = xmobarColor myTextColor ""
-      , ppHidden = xmobarColor myNonFocusedTextColor ""
-      }
-    }
+--main = do
+--  xmproc <- spawnPipe "/home/zjgkkn/.cabal/bin/xmobar ~/.xmonad/xmobar.hs"
+--  xmonad $ ewmh defaults {
+--    logHook = dynamicLogWithPP $ xmobarPP
+--      { ppOutput = hPutStrLn xmproc
+--      , ppTitle = xmobarColor myXmobarTitleColor "" . shorten 75
+--      , ppLayout = xmobarColor myXmobarLayoutColor ""
+
+--      , ppCurrent = xmobarColor myTextColor ""
+--      , ppHidden = xmobarColor myNonFocusedTextColor ""
+--      }
+--    }
+
+main = xmonad $ ewmhFullscreen . ewmh $ defaults
 
 -- Config
-defaults = def {
-  terminal           = myTerminal,
+defaults = xfceConfig {
+ terminal           = myTerminal,
   focusFollowsMouse  = myFocusFollowsMouse,
   borderWidth        = myBorderWidth,
   modMask            = myModMask,
@@ -156,7 +152,5 @@ defaults = def {
   keys               = myKeys,
   mouseBindings      = myMouseBindings,
   layoutHook         = myLayout,
-  manageHook         = myManageHook,
-  handleEventHook    = myEventHook,
-  startupHook        = myStartupHook
+  manageHook         = myManageHook
   }
