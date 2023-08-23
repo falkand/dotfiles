@@ -1,0 +1,8 @@
+configuration {
+  modi: "drun,wingow";
+  font: "Fira Code 14";
+  terminal: "xterm";
+  run-shell-command: "{terminal} -e '{cmd}; read -n 1'";
+  ssh-command: "xfce4-terminal -e \"ssh kvlad@{host}\"";
+  combi-modi: "window,drun,ssh";
+}
